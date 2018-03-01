@@ -1,0 +1,56 @@
+{% macro render_form(form, url) %}
+<form method="POST" action="{{ url }}">
+  {{ form.csrf_token }}
+  {% for field in form %}
+    {% if field.type == 'CSRFTokenField' %}
+    {{ '' }}
+    {% elif field.type == 'SubmitField' %}
+    {{ form.submit(class='btn btn-primary', type='submit') }}
+    {% elif field.type == 'BooleanField' %}
+    <div class="checkbox">
+      <label>{{ field() }} {{ field.label.text }}</label>
+    </div>
+    {% else %}
+    <!-- 当 errors 不为空，添加 has-error 类，这样输入框就变成红色了-->
+    <div class="form-group {% if field.errors %}has-error{% endif %}">
+      {{ field.label }} {{ field(class='form-control') }}
+    <!-- 当 errors 不为空，遍历显示每一个 error -->
+      {% if field.errors %}
+        {% for error in field.errors %}
+        <!-- 根据 Bootstrap 样式错误信息要显示先类为 help-block 的 span 标签中-->
+        <span class="help-block">{{ error }}</span>
+        {% endfor %}
+      {% endif %}
+    </div>
+    {% endif %}
+  {% endfor %}
+</form>
+{% endmacro %}
+
+{% macro render_pagination(pagination, endpoint) %}
+<nav class="nav-pagination" aria-label="Page navigation">
+  <ul class=pagination>
+    <!-- 链接到上一页的左箭头（&laquo;），如果没有上一页设为 disable 状态 -->
+    <li{% if not pagination.has_prev %} class="disabled"{% endif %}>
+    <a href="{{url_for(endpoint, page=pagination.prev_num) if pagination.has_prev else '#'}}">&laquo;</a>
+    </li>
+  <!-- 渲染每个页数的按钮 -->
+  {% for page in pagination.iter_pages() %}
+    {% if page %}
+      {% if page != pagination.page %}
+      <li><a href="{{ url_for(endpoint, page=page) }}">{{ page }}</a></li>
+      {% else %}
+      <!-- 如果页数是当前页，设置为选中状态 -->
+      <li class="active"><a href="#">{{page}} <span class="sr-only">(current)</span></a></li>
+      {% endif %}
+    {% else %}
+      <span class=ellipsis>…</span>
+    {% endif %}
+  {% endfor %}
+    <!-- 链接到下一页的右箭头（&raquo;），如果没有下一页设为 disable 状态 -->
+    <li{% if not pagination.has_next %} class="disabled"{% endif %}>
+    <a href="{{url_for(endpoint, page=pagination.next_num) if pagination.has_next else '#'}}">&raquo;</a>
+    </li>
+  </ul>
+</nav>
+{% endmacro %}
